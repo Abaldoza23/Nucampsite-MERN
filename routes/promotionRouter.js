@@ -1,120 +1,48 @@
 const express = require("express");
-const PromotionsRouter = express.Router();
-const authenticate = require('../authenticate');
+const Promotion = require("../models/promotions");
+const authenticate = require("../authenticate");
 
-const Promotions = require("../models/promotions");
+const promotionRouter = express.Router();
 
-PromotionsRouter
+promotionRouter
   .route("/")
-  .all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    next();
+  .options((req, res) => res.sendStatus(200))
+  .get((req, res, next) => {
+    res.end("Will send all the promotions to you");
   })
-  .get((req, res) => {
-    // res.end("Will send all promotions to you");
-    Promotions.find()
-      .then((promotions) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(promotions);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  })
-  .post(authenticate.verifyUser, (req, res) => {
-    // res.end(
-    //   //   "Will add promotions: " + req.body.name + "with description" + req.body.description
-    //   `Will create promotions: ${req.body.name} with description ${req.body.description}`
-    // );
-    Promotions.create(req.body)
-    //   name: req.body.name,
-    //   image: req.body.image,
-    //   description: req.body.description,
-    //   featured: req.body.featured,
-    // })
-      .then((promotions) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(promotions);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+    res.end(`Will add the promotion: ${req.body.name} 
+        with description: ${req.body.description} `);
   })
   .put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
-    res.end("PUT request not supported on /promotions");
+    res.end("PUT operation not supported on /promotions");
   })
-  .delete(authenticate.verifyUser, (req, res) => {
-    // res.end("Will eventually delete all promotions");
-    Promotions.deleteMany()
-      .then((response) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(response);
-      })
-      .catch((e) => console.log(e));
-      });
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+    res.end("Deleting all promotions");
+  });
 
-PromotionsRouter
-  .route("/:promotionsId")
-  .all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    next();
-  })
-  .get((req, res) => {
-    // res.end(`Will send details of the promotions: ${req.params.promotionsId} to you`);
-    Promotions.findById(req.params.promotionsId)
-      .then((promotions) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(promotions);
-      })
-      .catch((e) => console.log(e));
+promotionRouter
+  .route("/:promotionId")
+  .options((req, res) => res.sendStatus(200))
+  .get((req, res, next) => {
+    res.end(
+      `Will send details of the promotion: ${req.params.promotionId} to you`
+    );
   })
   .post(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(
-      `POST operation not supported on /promotions/${req.params.promotionsId}`
+      `POST operation not supported on /promotions/${req.params.promotionId}`
     );
   })
-  .put(authenticate.verifyUser, (req, res) => {
-    // res.write(`Updating the promotions: ${req.params.promotionsId}\n`);
-    // res.end(`Will update the promotions: ${req.body.name}
-    // with description: ${req.body.description}`);
-    Promotions.findByIdAndUpdate(
-      req.params.promotionsId,
-      {
-        $set: req.body,
-      },
-      {
-        new: true,
-      }
-    )
-      .then((promotions) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(promotions);
-      })
-      .catch((e) => console.log(e));
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+    res.write(`Updating the promotion: ${req.params.promotionId}\n`);
+    res.end(`Will update the promotion: ${req.body.name} 
+        with description: ${req.body.description}`);
   })
-  .delete(authenticate.verifyUser, (req, res) => {
-    // res.end(`Deleting promotions: ${req.params.promotionsId}`);
-    Promotions.findByIdAndDelete(req.params.promotionsId)
-      .then((promotions) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(promotions);
-      })
-      .catch((e) => console.log(e));
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+    res.end(`Deleting promotion: ${req.params.promotionId}`);
   });
 
-// Test: Use Postman to test each of your newly created endpoints and verify that you receive the expected responses.
-// Test GET/POST/PUT/DELETE requests to: localhost:3000/promotions/1
-// You do not have to use /1. You could just as well use /23, or /foo, or any other string in its place.
-// For the PUT request, make sure to send a JSON string in the body of the request with a name and description, the same way you did in the exercises.
-
-module.exports = PromotionsRouter;
+module.exports = promotionRouter;
